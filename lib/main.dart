@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +21,14 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  const MyHomePage({Key? key});
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String? _fileName;
   String _responseText = '';
 
   Future<void> _openFilePicker() async {
@@ -38,12 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
     await input.onChange.first;
     final files = input.files!;
     if (files.isNotEmpty) {
-      _uploadFile(files.first); // Upload the first selected file
+      await _uploadFile(files.first); // Upload the first selected file
     }
   }
 
   Future<void> _uploadFile(File file) async {
-    const url = 'http://d825-35-231-54-111.ngrok.io/predict';
+    const url = 'http://c586-34-86-120-168.ngrok.io/predict';
     final request = http.MultipartRequest('POST', Uri.parse(url));
 
     final reader = FileReader();
@@ -58,33 +59,65 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     request.files.add(fileField);
 
-    final response = await request.send();
-    final responseStream = await response.stream.bytesToString();
-    final responseData = jsonDecode(responseStream);
+    try {
+      final response = await request.send();
+      final responseStream = await response.stream.bytesToString();
+      final responseData = await jsonDecode(responseStream);
 
-    setState(() {
-      _responseText = responseData.toString();
-    });
+      setState(() {
+        _responseText = responseData['arrhythmia class'].toString();
+        _fileName = file.name;
+      });
+    } catch (e) {
+      setState(() {
+        _responseText = 'Error: $e';
+        _fileName = null;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('File Upload Example'),
+        title: const Text('Arrhythmia Predictor'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: _openFilePicker,
-              child: const Text('Select File'),
-            ),
-            const SizedBox(height: 16),
-            Text(_responseText),
+            if (_fileName == null)
+              const Text('No file selected.')
+            else
+              Column(
+                children: [
+                  const Text(
+                    'File Name:',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                  Text(
+                    _fileName!,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _responseText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _responseText.startsWith('Error')
+                          ? Colors.red
+                          : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openFilePicker,
+        tooltip: 'Upload file',
+        child: const Icon(Icons.upload),
       ),
     );
   }
