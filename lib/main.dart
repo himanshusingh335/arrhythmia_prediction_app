@@ -9,19 +9,19 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'File Upload Example',
+      title: 'Arrhythmia Predictor',
       home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key});
+  const MyHomePage({super.key});
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -61,17 +61,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final response = await request.send();
-      final responseStream = await response.stream.bytesToString();
-      final responseData = await jsonDecode(responseStream);
+      if (response.statusCode == 200) {
+        final responseStream = await response.stream.bytesToString();
+        final responseData = await jsonDecode(responseStream);
 
-      setState(() {
-        _responseText = responseData['arrhythmia class'].toString();
-        _fileName = file.name;
-      });
+        setState(() {
+          _responseText = responseData['arrhythmia class'].toString();
+          _fileName = file.name;
+        });
+      } else {
+        setState(() {
+          _responseText =
+              'Error: HTTP ${response.statusCode}: ${response.reasonPhrase}';
+          _fileName = "Wrong file uploaded";
+        });
+      }
     } catch (e) {
+      print(e);
       setState(() {
         _responseText = 'Error: $e';
-        _fileName = null;
+        _fileName = "Please check your server connection";
       });
     }
   }
