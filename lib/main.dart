@@ -30,21 +30,27 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String? _fileName;
   String _responseText = '';
+  File? csvFile;
 
-  Future<void> _openFilePicker() async {
+  Future<File>? _openFilePicker() async {
     final input = FileUploadInputElement();
     input.multiple = true; // Allow user to select multiple files
     input.click();
 
     await input.onChange.first;
     final files = input.files!;
-    if (files.isNotEmpty) {
-      await _uploadFile(files.first); // Upload the first selected file
-    }
+    setState(() {
+      _fileName = files.first.name;
+    });
+    // if (files.isNotEmpty) {
+    //   await _uploadFile(files.first); // Upload the first selected file
+    // }
+    csvFile = files.first;
+    return files.first;
   }
 
   Future<void> _uploadFile(File file) async {
-    const url = 'http://c586-34-86-120-168.ngrok.io/predict';
+    const url = 'http://be54-35-188-82-2.ngrok.io/predict';
     final request = http.MultipartRequest('POST', Uri.parse(url));
 
     final reader = FileReader();
@@ -108,6 +114,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: const TextStyle(fontSize: 20),
                   ),
                   const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _uploadFile(csvFile!);
+                    },
+                    icon: const Icon(Icons.send),
+                    label: const Text('Predict'),
+                  ),
                   Text(
                     _responseText,
                     style: TextStyle(
