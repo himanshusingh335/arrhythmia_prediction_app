@@ -24,7 +24,7 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -77,7 +77,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     } catch (e) {
-      print(e);
       setState(() {
         _responseText = 'Error: $e';
         _fileName = "Please check your server connection";
