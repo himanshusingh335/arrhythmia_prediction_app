@@ -1,15 +1,14 @@
 import 'dart:convert';
-import 'dart:typed_data';
-import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -30,34 +29,25 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String? _fileName;
   String _responseText = '';
-  File? csvFile;
+  late PlatformFile csvFile;
 
-  Future<File>? _openFilePicker() async {
-    final input = FileUploadInputElement();
-    input.multiple = true; // Allow user to select multiple files
-    input.click();
-
-    await input.onChange.first;
-    final files = input.files!;
-    setState(() {
-      _fileName = files.first.name;
-    });
-    // if (files.isNotEmpty) {
-    //   await _uploadFile(files.first); // Upload the first selected file
-    // }
-    csvFile = files.first;
-    return files.first;
+  Future<void> _openFilePicker() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      final file = result.files.first;
+      setState(() {
+        _fileName = file.name;
+        _responseText = '';
+        csvFile = file;
+      });
+    }
   }
 
-  Future<void> _uploadFile(File file) async {
+  Future<void> _uploadFile(PlatformFile file) async {
     const url = 'http://be54-35-188-82-2.ngrok.io/predict';
     final request = http.MultipartRequest('POST', Uri.parse(url));
-
-    final reader = FileReader();
-    reader.readAsArrayBuffer(file);
-    await reader.onLoad.first;
-
-    final fileBytes = reader.result as Uint8List;
+    final fileBytes = file.bytes!;
+    print(file);
     final fileField = http.MultipartFile.fromBytes(
       'file',
       fileBytes,
@@ -116,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      _uploadFile(csvFile!);
+                      _uploadFile(csvFile);
                     },
                     icon: const Icon(Icons.send),
                     label: const Text('Predict'),
