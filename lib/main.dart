@@ -44,10 +44,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _uploadFile(PlatformFile file) async {
-    const url = 'http://be54-35-188-82-2.ngrok.io/predict';
+    print(file);
+    const url = 'https://c706-35-188-82-2.ngrok.io/predict';
     final request = http.MultipartRequest('POST', Uri.parse(url));
     final fileBytes = file.bytes!;
-    print(file);
     final fileField = http.MultipartFile.fromBytes(
       'file',
       fileBytes,
